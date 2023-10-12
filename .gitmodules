@@ -1,0 +1,6 @@
+[submodule "lib/src/curp-proto"]
+	path = lib/src/curp-proto
+	url = https://github.com/xline-kv/curp-proto.git
+[submodule "lib/src/xline-proto"]
+	path = lib/src/xline-proto
+	url = https://github.com/xline-kv/xline-proto.git
