@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class KvClient {
-    private ProtocolClient curpClient;
-    private String token;
+    private final ProtocolClient curpClient;
+    private final String token;
 
     public KvClient(ProtocolClient curpClient, String token) {
         this.curpClient = curpClient;

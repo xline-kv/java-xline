@@ -22,7 +22,6 @@ import io.grpc.ManagedChannel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 @Nested
 class ProtocolTest {
@@ -31,9 +30,9 @@ class ProtocolTest {
 
     @BeforeAll
     static void connect() {
-        String[] curpMembers = { "172.20.0.3:2379", "172.20.0.4:2379", "172.20.0.5:2379" };
+        String[] curpMembers = {"172.20.0.3:2379", "172.20.0.4:2379", "172.20.0.5:2379"};
 
-        ArrayList<ManagedChannel> channels = new ArrayList<ManagedChannel>();
+        ArrayList<ManagedChannel> channels = new ArrayList<>();
         for (String curpMember : curpMembers) {
             ManagedChannel channel = Grpc.newChannelBuilder(curpMember, InsecureChannelCredentials.create()).build();
             channels.add(channel);
@@ -44,21 +43,18 @@ class ProtocolTest {
 
     @BeforeEach
     void toCmd() {
-        this.cmd = Command.newBuilder().setRequest(RequestWithToken.newBuilder()
-                .setPutRequest(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8("Hello"))
-                        .setValue(ByteString.copyFromUtf8("Xline")).build())
-                .build()).setProposeId(String.format("client-%s", UUID.randomUUID())).build();
+        this.cmd = Command.newBuilder().setRequest(RequestWithToken.newBuilder().setPutRequest(PutRequest.newBuilder().setKey(ByteString.copyFromUtf8("Hello")).setValue(ByteString.copyFromUtf8("Xline")).build()).build()).build();
     }
 
     @Test
-    void testProposeInFastPath() {
+    void testProposeInFastPath() throws Exception {
         CommandResponse res = client.propose(cmd, true);
         assertNotNull(res);
         System.out.println(res);
     }
 
     @Test
-    void testProposeInSlowPath() {
+    void testProposeInSlowPath() throws Exception {
         CommandResponse res = client.propose(this.cmd, false);
         assertNotNull(res);
         System.out.println(res);

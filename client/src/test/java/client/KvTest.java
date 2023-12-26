@@ -39,12 +39,6 @@ public class KvTest {
     static void connect() {
         String[] curpMembers = {"172.20.0.3:2379", "172.20.0.4:2379", "172.20.0.5:2379"};
 
-        ArrayList<ManagedChannel> channels = new ArrayList<ManagedChannel>();
-        for (String curpMember : curpMembers) {
-            ManagedChannel channel = Grpc.newChannelBuilder(curpMember, InsecureChannelCredentials.create()).build();
-            channels.add(channel);
-        }
-
         kvClient = new Client(curpMembers).kvClient;
     }
 
@@ -158,8 +152,8 @@ public class KvTest {
         // after compacting
         try {
             kvClient.get(RangeRequest.newBuilder().setKey(ByteString.copyFromUtf8("compact")).setRevision(rev - 1).build());
-            assertTrue(false);
-        } catch (Exception e) {
+            fail();
+        } catch (Exception ignored) {
         }
         // assertEquals(ByteString.copyFromUtf8("0"), rev0res.getKvs(0).getValue());
 
