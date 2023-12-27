@@ -8,7 +8,9 @@ import java.util.ArrayList;
 
 
 public class Client {
-    public KvClient kvClient;
+    public final KvClient kvClient;
+
+    public final AuthClient authClient;
 
     public Client(String[] addrs) {
         ArrayList<ManagedChannel> channels = new ArrayList<>();
@@ -19,5 +21,6 @@ public class Client {
         ProtocolClient curpClient = new ProtocolClient(channels);
 
         this.kvClient = new KvClient(curpClient, "");
+        this.authClient = new AuthClient(curpClient, "");
     }
 }
