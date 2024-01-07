@@ -1,6 +1,6 @@
-[submodule "lib/src/proto/curp-proto"]
-	path = lib/src/proto/curp-proto
+[submodule "client/src/proto/curp-proto"]
+	path = client/src/proto/curp-proto
 	url = https://github.com/xline-kv/curp-proto.git
-[submodule "lib/src/proto/xline-proto"]
-	path = lib/src/proto/xline-proto
+[submodule "client/src/proto/xline-proto"]
+	path = client/src/proto/xline-proto
 	url = https://github.com/xline-kv/xline-proto.git

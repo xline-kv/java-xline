@@ -34,3 +34,5 @@ build
 
 # Ignore Playground directory
 playground
+
+.idea

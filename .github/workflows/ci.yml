@@ -7,6 +7,33 @@ on:
     branches: [main]
 
 jobs:
+  test:
+    name: Test Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Install SDKMAN
+        run: | 
+          curl -s "https://get.sdkman.io" | bash &&
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+
+      - name: Install Gradle
+        run: sdk install gradle 8.4
+        
+      - name: Start the cluster
+        run: ./scripts/quick_start.sh
+
+      - name: Run test
+        run: ./gradlew test
+  
   commit:
     name: Commit Message Validation
     runs-on: ubuntu-latest
