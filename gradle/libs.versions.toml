@@ -49,4 +49,3 @@ grpc = ["grpcCore", "grpcNetty", "grpcProtobuf", "grpcStub", "grpcGrpclb", "grpc
 log4j = ["log4jApi", "log4jCore", "log4jSlf4j", "log4j12"]
 javax = ["javaxAnnotation"]
 testing = ["junit", "assertj"]
-
