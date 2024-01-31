@@ -4,9 +4,32 @@ on:
   schedule:
     - cron: "00 19 * * *" # run ci periodically at 3 am
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
+  test:
+    name: Test Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Start the cluster
+        run: ./scripts/quick_start.sh
+
+      - name: Run test
+        run: ./gradlew test
+
   commit:
     name: Commit Message Validation
     runs-on: ubuntu-latest
@@ -28,8 +51,8 @@ jobs:
     name: Spell Check
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Actions Repository
-      uses: actions/checkout@v2
+      - name: Checkout Actions Repository
+        uses: actions/checkout@v2
 
-    - name: Check Spelling
-      uses: crate-ci/typos@master
+      - name: Check Spelling
+        uses: crate-ci/typos@master
