@@ -1,6 +1,7 @@
 .*
 !.github
 !.gitignore
+!.pre-commit-config.yaml
 !gradle/wrapper/gradle-wrapper.jar
 target/
 target-ide/
