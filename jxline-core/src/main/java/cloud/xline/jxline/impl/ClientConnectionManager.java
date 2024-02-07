@@ -5,6 +5,7 @@ import cloud.xline.jxline.ClientBuilder;
 import io.etcd.jetcd.ByteSequence;
 import io.grpc.*;
 import io.grpc.netty.NegotiationType;
+import io.grpc.stub.AbstractStub;
 import io.netty.channel.ChannelOption;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -12,12 +13,16 @@ import io.vertx.grpc.VertxChannelBuilder;
 
 import java.util.concurrent.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 final class ClientConnectionManager {
     private final Object lock;
     private final ClientBuilder builder;
     private final ExecutorService executorService;
     private volatile Vertx vertx;
+
+    /// Integrated channel
+    private volatile ManagedChannel initChannel;
 
     ClientConnectionManager(ClientBuilder builder) {
         this.lock = new Object();
@@ -142,6 +147,37 @@ final class ClientConnectionManager {
         }
 
         return channelBuilder;
+    }
+
+    public ManagedChannel getInitChannel() {
+        if (this.initChannel == null) {
+            synchronized (lock) {
+                if (this.initChannel == null) {
+                    this.initChannel = defaultChannelBuilder().build();
+                }
+            }
+        }
+        return this.initChannel;
+    }
+
+    /**
+     * Create stub with saved integrated channel. Used to create some xline servers
+     *
+     * @param supplier the stub supplier
+     * @param  <T> the type of stub
+     * @return the attached stub
+     */
+    <T extends AbstractStub<T>> T newStub(Function<ManagedChannel, T> supplier) {
+        return newStub(supplier, this.getInitChannel());
+    }
+
+    private <T extends AbstractStub<T>> T newStub(
+            Function<ManagedChannel, T> stubCustomizer, ManagedChannel channel) {
+        T stub = stubCustomizer.apply(channel);
+        if (builder.waitForReady()) {
+            stub = stub.withWaitForReady();
+        }
+        return stub;
     }
 
     Vertx vertx() {
