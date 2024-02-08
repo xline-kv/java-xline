@@ -6,7 +6,7 @@ public final class Pair<A, B> {
     final A a;
     final B b;
 
-    Pair(A a, B b) {
+    public Pair(A a, B b) {
         this.a = Objects.requireNonNull(a);
         this.b = Objects.requireNonNull(b);
     }
