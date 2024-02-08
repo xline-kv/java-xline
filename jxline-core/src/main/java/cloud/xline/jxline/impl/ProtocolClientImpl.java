@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -49,18 +50,18 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
     public <T> CompletableFuture<T> propose(
             Command cmd,
             boolean useFastPath,
-            Function<Pair<CommandResponse, SyncResponse>, T> convert) {
+            BiFunction<CommandResponse, SyncResponse, T> convert) {
         ProposeId id = this.getProposeId();
         Executor executor = connectionManager().getExecutorService();
         if (!useFastPath) {
             return CompletableFuture.supplyAsync(() -> this.fastRound(id, cmd), executor)
                     .handleAsync((r, ex) -> this.slowRound(id), executor)
-                    .thenApply(convert);
+                    .thenApply(pair -> pair.apply(convert));
         }
         CompletionService<T> service =
                 new ExecutorCompletionService<>(connectionManager().getExecutorService());
-        service.submit(() -> convert.apply(new Pair<>(this.fastRound(id, cmd), null)));
-        service.submit(() -> convert.apply(this.slowRound(id)));
+        service.submit(() -> convert.apply(this.fastRound(id, cmd), null));
+        service.submit(() -> this.slowRound(id).apply(convert));
 
         return CompletableFuture.supplyAsync(
                 () -> {
