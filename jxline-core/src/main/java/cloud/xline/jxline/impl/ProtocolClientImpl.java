@@ -1,5 +1,6 @@
 package cloud.xline.jxline.impl;
 
+import cloud.xline.jxline.ProtocolClient;
 import cloud.xline.jxline.exceptions.CurpException;
 import cloud.xline.jxline.exceptions.XlineException;
 import cloud.xline.jxline.utils.Invoke;
@@ -26,9 +27,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-class ProtocolClient extends Impl {
+class ProtocolClientImpl extends Impl implements ProtocolClient {
 
     private final State state;
+
+    ProtocolClientImpl(ClientConnectionManager connectionManager) {
+        super(connectionManager);
+        this.state = getInitState();
+    }
 
     private ProposeId getProposeId() {
         UUID uuid = UUID.randomUUID();
@@ -39,7 +45,8 @@ class ProtocolClient extends Impl {
         return ProposeId.newBuilder().setClientId(clientId).setSeqNum(seqNum).build();
     }
 
-    <T> CompletableFuture<T> propose(
+    @Override
+    public <T> CompletableFuture<T> propose(
             Command cmd,
             boolean useFastPath,
             Function<Pair<CommandResponse, SyncResponse>, T> convert) {
@@ -244,27 +251,22 @@ class ProtocolClient extends Impl {
         return quorum(size) / 2 + 1;
     }
 
-    ProtocolClient(ClientConnectionManager connectionManager) {
-        super(connectionManager);
-        this.state = getInitState();
-    }
-
     State getInitState() {
         ManagedChannel initChannel = this.connectionManager().getInitChannel();
-        ProtocolGrpc.ProtocolBlockingStub initStub = ProtocolGrpc.newBlockingStub(initChannel);
+        VertxProtocolGrpc.ProtocolVertxStub initStub = VertxProtocolGrpc.newVertxStub(initChannel);
         FetchClusterResponse response = null;
+        FetchClusterRequest request =
+                FetchClusterRequest.newBuilder().setLinearizable(false).build();
+        int retries = -1;
         do {
+            retries++;
+            if (retries > 5) {
+                throw new RuntimeException("connection failed");
+            }
             try {
-                response =
-                        CompletableFuture.supplyAsync(
-                                        () ->
-                                                initStub.fetchCluster(
-                                                        FetchClusterRequest.newBuilder()
-                                                                .setLinearizable(false)
-                                                                .build()),
-                                        this.connectionManager().getExecutorService())
-                                .get();
-            } catch (Exception ignore) {
+                response = completable(initStub.fetchCluster(request)).get(3, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger().warn("fetch cluster failed, " + e);
             }
         } while (response == null || !response.hasLeaderId());
 
@@ -273,7 +275,7 @@ class ProtocolClient extends Impl {
             String target =
                     member.getAddrsList().stream()
                             .map(URI::create)
-                            .map(ProtocolClient::getEndpoint)
+                            .map(ProtocolClientImpl::getEndpoint)
                             .distinct()
                             .collect(Collectors.joining(","));
             String authority = connectionManager().builder().authority();
@@ -365,7 +367,7 @@ class ProtocolClient extends Impl {
                     String target =
                             member.getAddrsList().stream()
                                     .map(URI::create)
-                                    .map(ProtocolClient::getEndpoint)
+                                    .map(ProtocolClientImpl::getEndpoint)
                                     .distinct()
                                     .collect(Collectors.joining(","));
                     String authority = connectionManager().builder().authority();
