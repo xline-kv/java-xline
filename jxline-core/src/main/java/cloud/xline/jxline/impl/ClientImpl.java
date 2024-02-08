@@ -3,11 +3,16 @@ package cloud.xline.jxline.impl;
 import cloud.xline.jxline.Client;
 import cloud.xline.jxline.ClientBuilder;
 
+import cloud.xline.jxline.ProtocolClient;
 import io.etcd.jetcd.*;
 
 public final class ClientImpl implements Client {
 
-    public ClientImpl(ClientBuilder clientBuilder) {}
+    private final ClientConnectionManager manager;
+
+    public ClientImpl(ClientBuilder clientBuilder) {
+        this.manager = new ClientConnectionManager(clientBuilder);
+    }
 
     @Override
     public Auth getAuthClient() {
@@ -47,6 +52,11 @@ public final class ClientImpl implements Client {
     @Override
     public Election getElectionClient() {
         return null;
+    }
+
+    @Override
+    public ProtocolClient getProtocolClient() {
+        return new ProtocolClientImpl(this.manager);
     }
 
     @Override
