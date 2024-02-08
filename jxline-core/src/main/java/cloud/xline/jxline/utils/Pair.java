@@ -1,6 +1,7 @@
 package cloud.xline.jxline.utils;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
 
 public final class Pair<A, B> {
     final A a;
@@ -28,6 +29,10 @@ public final class Pair<A, B> {
             return a.equals(e.getFirst()) && b.equals(e.getSecond());
         }
         return false;
+    }
+
+    public <T> T apply(BiFunction<A, B, T> fn) {
+        return fn.apply(a, b);
     }
 
     @Override

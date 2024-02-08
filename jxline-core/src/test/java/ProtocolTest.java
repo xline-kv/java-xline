@@ -5,6 +5,7 @@ import com.xline.protobuf.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import static org.assertj.core.api.Assertions.*;
 
 @Timeout(value = 20)
 public class ProtocolTest {
@@ -32,8 +33,7 @@ public class ProtocolTest {
                                                         .build())
                                         .build())
                         .build();
-        PutResponse resp =
-                client.propose(command, true, res -> res.getFirst().getPutResponse()).get();
-        assert resp != null;
+        PutResponse resp = client.propose(command, true, (sr, asr) -> sr.getPutResponse()).get();
+        assertThat(resp).isNotNull();
     }
 }
