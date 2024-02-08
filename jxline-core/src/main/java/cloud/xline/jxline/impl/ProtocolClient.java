@@ -11,6 +11,7 @@ import com.xline.protobuf.Command;
 import com.xline.protobuf.CommandResponse;
 import com.xline.protobuf.ExecuteError;
 import com.xline.protobuf.SyncResponse;
+import io.etcd.jetcd.resolver.IPNameResolver;
 import io.grpc.ManagedChannel;
 import io.vertx.core.Future;
 
@@ -24,7 +25,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 class ProtocolClient extends Impl {
 
@@ -271,13 +271,18 @@ class ProtocolClient extends Impl {
         HashMap<Long, VertxProtocolGrpc.ProtocolVertxStub> stubs = new HashMap<>();
         for (Member member : response.getMembersList()) {
             String target =
-                    StreamSupport.stream(
-                                    member.getAddrsList().stream().map(URI::create).spliterator(),
-                                    false)
-                            .map(e -> e.getHost() + (e.getPort() != -1 ? ":" + e.getPort() : ""))
+                    member.getAddrsList().stream()
+                            .map(URI::create)
+                            .map(ProtocolClient::getEndpoint)
                             .distinct()
                             .collect(Collectors.joining(","));
-            ManagedChannel channel = this.connectionManager().defaultChannelBuilder(target).build();
+            String authority = connectionManager().builder().authority();
+            String ips =
+                    String.format(
+                            "%s://%s/%s",
+                            IPNameResolver.SCHEME, authority != null ? authority : "", target);
+
+            ManagedChannel channel = connectionManager().defaultChannelBuilder(ips).build();
             VertxProtocolGrpc.ProtocolVertxStub stub = VertxProtocolGrpc.newVertxStub(channel);
             stubs.put(member.getId(), stub);
         }
@@ -358,21 +363,20 @@ class ProtocolClient extends Impl {
                 HashMap<Long, VertxProtocolGrpc.ProtocolVertxStub> stubs = new HashMap<>();
                 for (Member member : res.getMembersList()) {
                     String target =
-                            StreamSupport.stream(
-                                            member.getAddrsList().stream()
-                                                    .map(URI::create)
-                                                    .spliterator(),
-                                            false)
-                                    .map(
-                                            e ->
-                                                    e.getHost()
-                                                            + (e.getPort() != -1
-                                                                    ? ":" + e.getPort()
-                                                                    : ""))
+                            member.getAddrsList().stream()
+                                    .map(URI::create)
+                                    .map(ProtocolClient::getEndpoint)
                                     .distinct()
                                     .collect(Collectors.joining(","));
-                    ManagedChannel channel =
-                            connectionManager().defaultChannelBuilder(target).build();
+                    String authority = connectionManager().builder().authority();
+                    String ips =
+                            String.format(
+                                    "%s://%s/%s",
+                                    IPNameResolver.SCHEME,
+                                    authority != null ? authority : "",
+                                    target);
+
+                    ManagedChannel channel = connectionManager().defaultChannelBuilder(ips).build();
                     VertxProtocolGrpc.ProtocolVertxStub stub =
                             VertxProtocolGrpc.newVertxStub(channel);
                     stubs.put(member.getId(), stub);
@@ -385,5 +389,9 @@ class ProtocolClient extends Impl {
                 this.lock.writeLock().unlock();
             }
         }
+    }
+
+    static String getEndpoint(URI uri) {
+        return uri.getHost() + (uri.getPort() != -1 ? ":" + uri.getPort() : "");
     }
 }
