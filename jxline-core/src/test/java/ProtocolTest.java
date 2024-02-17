@@ -13,16 +13,12 @@ public class ProtocolTest {
 
     @BeforeAll
     static void onConnect() {
-        client =
-                Client.builder()
-                        .endpoints("http://172.20.0.3:2379", "http://172.20.0.4:2379")
-                        .build()
-                        .getProtocolClient();
+        client = Client.builder().endpoints("http://172.20.0.5:2379").build().getProtocolClient();
     }
 
     @Test
-    void testWorks() throws Exception {
-        Command command =
+    void testItWorks() throws Exception {
+        Command put =
                 Command.newBuilder()
                         .setRequest(
                                 RequestWithToken.newBuilder()
@@ -33,7 +29,20 @@ public class ProtocolTest {
                                                         .build())
                                         .build())
                         .build();
-        PutResponse resp = client.propose(command, true, (sr, asr) -> sr.getPutResponse()).get();
-        assertThat(resp).isNotNull();
+        PutResponse putResp = client.propose(put, false, (sr, asr) -> sr.getPutResponse()).get();
+        assertThat(putResp).isNotNull();
+        Command get =
+                Command.newBuilder()
+                        .setRequest(
+                                RequestWithToken.newBuilder()
+                                        .setRangeRequest(
+                                                RangeRequest.newBuilder()
+                                                        .setKey(ByteString.copyFromUtf8("Hello"))
+                                                        .build()))
+                        .build();
+        RangeResponse getResp = client.propose(get, true, (sr, asr) -> sr.getRangeResponse()).get();
+        assertThat(getResp).isNotNull();
+        assertThat(getResp.getCount()).isEqualTo(1);
+        assertThat(getResp.getKvs(0).getValue()).isEqualTo(ByteString.copyFromUtf8("Xline"));
     }
 }

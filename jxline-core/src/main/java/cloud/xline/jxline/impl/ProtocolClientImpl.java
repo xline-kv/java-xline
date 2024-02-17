@@ -275,7 +275,13 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
         for (Member member : response.getMembersList()) {
             String target =
                     member.getAddrsList().stream()
-                            .map(URI::create)
+                            .map(
+                                    addr -> {
+                                        if (!addr.startsWith("http")) {
+                                            return URI.create("http://" + addr);
+                                        }
+                                        return URI.create(addr);
+                                    })
                             .map(ProtocolClientImpl::getEndpoint)
                             .distinct()
                             .collect(Collectors.joining(","));
