@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  commit:
+    name: Commit Message Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - run: git show-ref
+      - uses: actions-rs/install@v0.1
+        with:
+          crate: git-cz
+          version: latest
+      - name: Validate commit messages
+        run: git-cz check ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Start the cluster
+        run: ./scripts/quick_start.sh
+
+      - name: Run test
+        run: ./gradlew test
+
+  spell-check:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions Repository
+        uses: actions/checkout@v2
+
+      - name: Check Spelling
+        uses: crate-ci/typos@master
