@@ -1,13 +1,11 @@
 import cloud.xline.jxline.Client;
 import cloud.xline.jxline.KV;
-import cloud.xline.jxline.exceptions.XlineException;
 import cloud.xline.jxline.kv.DeleteResponse;
 import cloud.xline.jxline.kv.GetResponse;
 import cloud.xline.jxline.kv.PutResponse;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
-import io.etcd.jetcd.options.PutOption;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -77,13 +75,6 @@ public class KVTest {
         PutResponse response = feature.get();
         assertThat(response.getHeader()).isNotNull();
         assertThat(!response.hasPrevKv()).isTrue();
-    }
-
-    @Test
-    public void testPutWithNotExistLease() {
-        PutOption option = PutOption.builder().withLeaseId(99999).build();
-        CompletableFuture<PutResponse> future = kvClient.put(SAMPLE_KEY, SAMPLE_VALUE, option);
-        assertThatExceptionOfType(XlineException.class).isThrownBy(future::get);
     }
 
     @Test

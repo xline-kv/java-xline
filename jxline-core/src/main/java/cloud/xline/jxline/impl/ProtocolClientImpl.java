@@ -191,6 +191,10 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
                 throw XlineException.toXlineException(e);
             } catch (ExecutionException e) {
                 Throwable cause = e.getCause();
+                // extract the most inner exception
+                while (cause instanceof ExecutionException) {
+                    cause = cause.getCause();
+                }
                 if (!(cause instanceof CurpException)) {
                     throw XlineException.toXlineException(cause);
                 }

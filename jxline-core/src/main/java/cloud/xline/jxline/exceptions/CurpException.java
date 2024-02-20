@@ -102,4 +102,9 @@ public class CurpException extends RuntimeException {
         CurpError curpError = trailers.get(STATUS_DETAILS_KEY);
         return new CurpException(curpError);
     }
+
+    @Override
+    public String toString() {
+        return "CurpError(" + error.toString().replace("\n", "") + ")";
+    }
 }
