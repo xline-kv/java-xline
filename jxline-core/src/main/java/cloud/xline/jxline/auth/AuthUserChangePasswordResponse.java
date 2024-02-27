@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-package cloud.xline.jxline.kv;
+package cloud.xline.jxline.auth;
 
 import cloud.xline.jxline.impl.AbstractResponse;
 import com.xline.protobuf.CommandResponse;
-import com.xline.protobuf.CompactionResponse;
 import com.xline.protobuf.SyncResponse;
 
-public class CompactResponse extends AbstractResponse<CompactionResponse> {
+/** AuthUserChangePasswordResponse */
+public class AuthUserChangePasswordResponse
+        extends AbstractResponse<com.xline.protobuf.AuthUserChangePasswordResponse> {
 
-    public CompactResponse(CompactionResponse response) {
+    public AuthUserChangePasswordResponse(
+            com.xline.protobuf.AuthUserChangePasswordResponse response) {
         super(response, response.getHeader());
     }
 
-    public CompactResponse(CommandResponse sr, SyncResponse asr) {
-        super(sr, asr, CommandResponse::getCompactionResponse, CompactionResponse::getHeader);
+    public AuthUserChangePasswordResponse(CommandResponse sr, SyncResponse asr) {
+        super(
+                sr,
+                asr,
+                CommandResponse::getAuthUserChangePasswordResponse,
+                com.xline.protobuf.AuthUserChangePasswordResponse::getHeader);
     }
 }

@@ -33,13 +33,15 @@ public class AbstractResponse<R> implements Response {
             CommandResponse sr,
             SyncResponse asr,
             Function<CommandResponse, R> mapping,
-            Function<CommandResponse, ResponseHeader> headerMapping) {
+            Function<R, ResponseHeader> headerMapping) {
         this.response = mapping.apply(sr);
         if (asr != null) {
             this.responseHeader =
-                    headerMapping.apply(sr).toBuilder().setRevision(asr.getRevision()).build();
+                    headerMapping.apply(this.response).toBuilder()
+                            .setRevision(asr.getRevision())
+                            .build();
         } else {
-            this.responseHeader = headerMapping.apply(sr);
+            this.responseHeader = headerMapping.apply(this.response);
         }
         this.header = new HeaderImpl();
     }

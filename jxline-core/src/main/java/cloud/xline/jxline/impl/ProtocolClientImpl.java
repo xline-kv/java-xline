@@ -173,6 +173,7 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
                             if (cmdResult.hasOk()) {
                                 return CommandResponse.parseFrom(cmdResult.getOk());
                             }
+                            // No cmd result
                             return null;
                         });
 
@@ -194,6 +195,10 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
                 // extract the most inner exception
                 while (cause instanceof ExecutionException) {
                     cause = cause.getCause();
+                }
+                // serde error
+                if (cause instanceof InvalidProtocolBufferException) {
+                    continue;
                 }
                 if (!(cause instanceof CurpException)) {
                     throw XlineException.toXlineException(cause);

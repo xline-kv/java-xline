@@ -1,10 +1,7 @@
 package cloud.xline.jxline.impl;
 
-import cloud.xline.jxline.Client;
-import cloud.xline.jxline.ClientBuilder;
+import cloud.xline.jxline.*;
 
-import cloud.xline.jxline.KV;
-import cloud.xline.jxline.ProtocolClient;
 import io.etcd.jetcd.support.MemorizingClientSupplier;
 
 public final class ClientImpl implements Client {
@@ -15,12 +12,16 @@ public final class ClientImpl implements Client {
 
     private final MemorizingClientSupplier<KV> kvClient;
 
+    private final MemorizingClientSupplier<Auth> authClient;
+
     public ClientImpl(ClientBuilder clientBuilder) {
         this.manager = new ClientConnectionManager(clientBuilder);
         this.protocolClient = new ProtocolClientImpl(this.manager);
         this.kvClient =
+                new MemorizingClientSupplier<>(() -> new KVImpl(this.protocolClient, this.manager));
+        this.authClient =
                 new MemorizingClientSupplier<>(
-                        () -> new KVImpl(this.protocolClient, this.manager));
+                        () -> new AuthImpl(this.protocolClient, this.manager));
     }
 
     @Override
@@ -31,5 +32,10 @@ public final class ClientImpl implements Client {
     @Override
     public KV getKVClient() {
         return this.kvClient.get();
+    }
+
+    @Override
+    public Auth getAuthClient() {
+        return this.authClient.get();
     }
 }

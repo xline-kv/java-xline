@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-package cloud.xline.jxline.kv;
+package cloud.xline.jxline.auth;
 
+import cloud.xline.jxline.Auth;
 import cloud.xline.jxline.impl.AbstractResponse;
 import com.xline.protobuf.CommandResponse;
-import com.xline.protobuf.CompactionResponse;
 import com.xline.protobuf.SyncResponse;
+import io.etcd.jetcd.ByteSequence;
 
-public class CompactResponse extends AbstractResponse<CompactionResponse> {
+/** AuthUserDeleteResponse returned by {@link Auth#userDelete(ByteSequence)} contains a header. */
+public class AuthUserDeleteResponse
+        extends AbstractResponse<com.xline.protobuf.AuthUserDeleteResponse> {
 
-    public CompactResponse(CompactionResponse response) {
+    public AuthUserDeleteResponse(com.xline.protobuf.AuthUserDeleteResponse response) {
         super(response, response.getHeader());
     }
 
-    public CompactResponse(CommandResponse sr, SyncResponse asr) {
-        super(sr, asr, CommandResponse::getCompactionResponse, CompactionResponse::getHeader);
+    public AuthUserDeleteResponse(CommandResponse sr, SyncResponse asr) {
+        super(
+                sr,
+                asr,
+                CommandResponse::getAuthUserDeleteResponse,
+                com.xline.protobuf.AuthUserDeleteResponse::getHeader);
     }
 }

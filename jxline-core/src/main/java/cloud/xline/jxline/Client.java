@@ -4,6 +4,8 @@ public interface Client {
 
     ProtocolClient getProtocolClient();
 
+    Auth getAuthClient();
+
     KV getKVClient();
 
     /**

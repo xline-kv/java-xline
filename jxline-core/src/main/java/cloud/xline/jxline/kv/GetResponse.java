@@ -38,7 +38,7 @@ public class GetResponse extends AbstractResponse<RangeResponse> {
     }
 
     public GetResponse(CommandResponse sr, SyncResponse asr, ByteSequence namespace) {
-        super(sr, asr, CommandResponse::getRangeResponse, s -> s.getRangeResponse().getHeader());
+        super(sr, asr, CommandResponse::getRangeResponse, RangeResponse::getHeader);
         this.namespace = namespace;
     }
 

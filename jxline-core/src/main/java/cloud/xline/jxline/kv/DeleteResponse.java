@@ -38,11 +38,7 @@ public class DeleteResponse extends AbstractResponse<DeleteRangeResponse> {
     }
 
     public DeleteResponse(CommandResponse sr, SyncResponse asr, ByteSequence namespace) {
-        super(
-                sr,
-                asr,
-                CommandResponse::getDeleteRangeResponse,
-                s -> s.getDeleteRangeResponse().getHeader());
+        super(sr, asr, CommandResponse::getDeleteRangeResponse, DeleteRangeResponse::getHeader);
         this.namespace = namespace;
     }
 

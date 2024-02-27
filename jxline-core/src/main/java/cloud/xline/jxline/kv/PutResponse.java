@@ -27,7 +27,7 @@ public class PutResponse extends AbstractResponse<com.xline.protobuf.PutResponse
     private final ByteSequence namespace;
 
     public PutResponse(CommandResponse sr, SyncResponse asr, ByteSequence namespace) {
-        super(sr, asr, CommandResponse::getPutResponse, s -> s.getPutResponse().getHeader());
+        super(sr, asr, CommandResponse::getPutResponse, com.xline.protobuf.PutResponse::getHeader);
         this.namespace = namespace;
     }
 

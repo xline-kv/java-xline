@@ -43,7 +43,7 @@ public class TxnResponse extends AbstractResponse<com.xline.protobuf.TxnResponse
     private List<TxnResponse> txnResponses;
 
     public TxnResponse(CommandResponse sr, SyncResponse asr, ByteSequence namespace) {
-        super(sr, asr, CommandResponse::getTxnResponse, s -> s.getTxnResponse().getHeader());
+        super(sr, asr, CommandResponse::getTxnResponse, com.xline.protobuf.TxnResponse::getHeader);
         this.namespace = namespace;
     }
 

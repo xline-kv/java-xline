@@ -21,7 +21,7 @@ class KVImpl extends Impl implements KV {
 
     private final ProtocolClient protocolClient;
 
-    public KVImpl(ProtocolClient protocolClient, ClientConnectionManager manager) {
+    KVImpl(ProtocolClient protocolClient, ClientConnectionManager manager) {
         super(manager);
         this.protocolClient = protocolClient;
     }

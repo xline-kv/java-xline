@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-package cloud.xline.jxline.kv;
+package cloud.xline.jxline.auth;
 
+import cloud.xline.jxline.Auth;
 import cloud.xline.jxline.impl.AbstractResponse;
 import com.xline.protobuf.CommandResponse;
-import com.xline.protobuf.CompactionResponse;
 import com.xline.protobuf.SyncResponse;
 
-public class CompactResponse extends AbstractResponse<CompactionResponse> {
+/** AuthEnableResponse returned by {@link Auth#authEnable()} call contains a header. */
+public class AuthEnableResponse extends AbstractResponse<com.xline.protobuf.AuthEnableResponse> {
 
-    public CompactResponse(CompactionResponse response) {
+    public AuthEnableResponse(com.xline.protobuf.AuthEnableResponse response) {
         super(response, response.getHeader());
     }
 
-    public CompactResponse(CommandResponse sr, SyncResponse asr) {
-        super(sr, asr, CommandResponse::getCompactionResponse, CompactionResponse::getHeader);
+    public AuthEnableResponse(CommandResponse sr, SyncResponse asr) {
+        super(
+                sr,
+                asr,
+                CommandResponse::getAuthEnableResponse,
+                com.xline.protobuf.AuthEnableResponse::getHeader);
     }
 }
