@@ -8,6 +8,8 @@ import java.util.function.Function;
 
 import cloud.xline.jxline.Txn;
 import cloud.xline.jxline.kv.TxnResponse;
+import com.xline.protobuf.Command;
+import com.xline.protobuf.RequestWithToken;
 import com.xline.protobuf.TxnRequest;
 import io.etcd.jetcd.ByteSequence;
 
@@ -17,13 +19,13 @@ import com.google.common.annotations.VisibleForTesting;
 public class TxnImpl implements Txn {
 
     public static TxnImpl newTxn(
-            Function<TxnRequest, CompletableFuture<TxnResponse>> f, ByteSequence namespace) {
-        return new TxnImpl(f, namespace);
+            ByteSequence namespace, Function<Command, CompletableFuture<TxnResponse>> f) {
+        return new TxnImpl(namespace, f);
     }
 
     @VisibleForTesting
-    static TxnImpl newTxn(Function<TxnRequest, CompletableFuture<TxnResponse>> f) {
-        return newTxn(f, ByteSequence.EMPTY);
+    static TxnImpl newTxn(Function<Command, CompletableFuture<TxnResponse>> f) {
+        return newTxn(ByteSequence.EMPTY, f);
     }
 
     private final ByteSequence namespace;
@@ -31,13 +33,12 @@ public class TxnImpl implements Txn {
     private final List<Cmp> cmpList = new ArrayList<>();
     private final List<Op> successOpList = new ArrayList<>();
     private final List<Op> failureOpList = new ArrayList<>();
-    private final Function<TxnRequest, CompletableFuture<TxnResponse>> requestF;
+    private final Function<Command, CompletableFuture<TxnResponse>> requestF;
 
     private boolean seenThen = false;
     private boolean seenElse = false;
 
-    private TxnImpl(
-            Function<TxnRequest, CompletableFuture<TxnResponse>> f, ByteSequence namespace) {
+    private TxnImpl(ByteSequence namespace, Function<Command, CompletableFuture<TxnResponse>> f) {
         this.requestF = f;
         this.namespace = namespace;
     }
@@ -92,7 +93,7 @@ public class TxnImpl implements Txn {
         return this.requestF.apply(this.toTxnRequest());
     }
 
-    private TxnRequest toTxnRequest() {
+    private Command toTxnRequest() {
         TxnRequest.Builder requestBuilder = TxnRequest.newBuilder();
 
         for (Cmp c : this.cmpList) {
@@ -107,6 +108,8 @@ public class TxnImpl implements Txn {
             requestBuilder.addFailure(o.toRequestOp(namespace));
         }
 
-        return requestBuilder.build();
+        return Command.newBuilder()
+                .setRequest(RequestWithToken.newBuilder().setTxnRequest(requestBuilder).build())
+                .build();
     }
 }

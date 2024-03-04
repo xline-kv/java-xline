@@ -4,6 +4,7 @@ import cloud.xline.jxline.KV;
 import cloud.xline.jxline.ProtocolClient;
 import cloud.xline.jxline.Txn;
 import cloud.xline.jxline.kv.*;
+import cloud.xline.jxline.op.TxnImpl;
 import cloud.xline.jxline.support.Requests;
 import com.xline.protobuf.Command;
 import io.etcd.jetcd.ByteSequence;
@@ -94,6 +95,14 @@ class KVImpl extends Impl implements KV {
 
     @Override
     public Txn txn() {
-        return null;
+        return TxnImpl.newTxn(
+                this.connectionManager().getNamespace(),
+                cmd ->
+                        protocolClient.propose(
+                                cmd,
+                                true,
+                                (sr, asr) ->
+                                        new TxnResponse(
+                                                sr, asr, this.connectionManager().getNamespace())));
     }
 }
