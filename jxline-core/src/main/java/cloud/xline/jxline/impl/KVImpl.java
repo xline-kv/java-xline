@@ -37,7 +37,7 @@ class KVImpl extends Impl implements KV {
         requireNonNull(value, "value should not be null");
         requireNonNull(option, "option should not be null");
         Command cmd =
-                Requests.mapPutRequest(key, value, option, this.connectionManager().getNamespace());
+                Requests.mapPutCommand(key, value, option, this.connectionManager().getNamespace());
         return protocolClient.propose(
                 cmd,
                 true,
@@ -55,7 +55,7 @@ class KVImpl extends Impl implements KV {
         requireNonNull(key, "key should not be null");
         requireNonNull(option, "option should not be null");
         Command cmd =
-                Requests.mapRangeRequest(key, option, this.connectionManager().getNamespace());
+                Requests.mapRangeCommand(key, option, this.connectionManager().getNamespace());
         return protocolClient.propose(
                 cmd,
                 true,
@@ -73,7 +73,7 @@ class KVImpl extends Impl implements KV {
         requireNonNull(key, "key should not be null");
         requireNonNull(option, "option should not be null");
         Command cmd =
-                Requests.mapDeleteRequest(key, option, this.connectionManager().getNamespace());
+                Requests.mapDeleteCommand(key, option, this.connectionManager().getNamespace());
         return protocolClient.propose(
                 cmd,
                 true,

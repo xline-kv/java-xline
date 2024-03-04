@@ -10,15 +10,20 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public final class Requests {
-    public static Command mapPutRequest(
+
+    public static PutRequest mapPutRequest(
             ByteSequence key, ByteSequence value, PutOption option, ByteSequence namespace) {
-        PutRequest req =
-                PutRequest.newBuilder()
-                        .setKey(Util.prefixNamespace(key, namespace))
-                        .setValue(ByteString.copyFrom(value.getBytes()))
-                        .setLease(option.getLeaseId())
-                        .setPrevKv(option.getPrevKV())
-                        .build();
+        return PutRequest.newBuilder()
+                .setKey(Util.prefixNamespace(key, namespace))
+                .setValue(ByteString.copyFrom(value.getBytes()))
+                .setLease(option.getLeaseId())
+                .setPrevKv(option.getPrevKV())
+                .build();
+    }
+
+    public static Command mapPutCommand(
+            ByteSequence key, ByteSequence value, PutOption option, ByteSequence namespace) {
+        PutRequest req = mapPutRequest(key, value, option, namespace);
         return Command.newBuilder()
                 .addKeys(KeyRange.newBuilder().setKey(ByteString.copyFrom(key.getBytes())).build())
                 .setRequest(
@@ -26,22 +31,26 @@ public final class Requests {
                 .build();
     }
 
-    public static Command mapRangeRequest(
+    public static RangeRequest.Builder mapRangeRequest(
             ByteSequence key, GetOption option, ByteSequence namespace) {
-        RangeRequest.Builder builder =
-                RangeRequest.newBuilder()
-                        .setKey(Util.prefixNamespace(key, namespace))
-                        .setCountOnly(option.isCountOnly())
-                        .setLimit(option.getLimit())
-                        .setRevision(option.getRevision())
-                        .setKeysOnly(option.isKeysOnly())
-                        .setSerializable(option.isSerializable())
-                        .setSortOrder(toRangeRequestSortOrder(option.getSortOrder()))
-                        .setSortTarget(toRangeRequestSortTarget(option.getSortField()))
-                        .setMinCreateRevision(option.getMinCreateRevision())
-                        .setMaxCreateRevision(option.getMaxCreateRevision())
-                        .setMinModRevision(option.getMinModRevision())
-                        .setMaxModRevision(option.getMaxModRevision());
+        return RangeRequest.newBuilder()
+                .setKey(Util.prefixNamespace(key, namespace))
+                .setCountOnly(option.isCountOnly())
+                .setLimit(option.getLimit())
+                .setRevision(option.getRevision())
+                .setKeysOnly(option.isKeysOnly())
+                .setSerializable(option.isSerializable())
+                .setSortOrder(toRangeRequestSortOrder(option.getSortOrder()))
+                .setSortTarget(toRangeRequestSortTarget(option.getSortField()))
+                .setMinCreateRevision(option.getMinCreateRevision())
+                .setMaxCreateRevision(option.getMaxCreateRevision())
+                .setMinModRevision(option.getMinModRevision())
+                .setMaxModRevision(option.getMaxModRevision());
+    }
+
+    public static Command mapRangeCommand(
+            ByteSequence key, GetOption option, ByteSequence namespace) {
+        RangeRequest.Builder builder = mapRangeRequest(key, option, namespace);
 
         defineRangeRequestEnd(
                 key, option.getEndKey(), option.isPrefix(), namespace, builder::setRangeEnd);
@@ -54,13 +63,16 @@ public final class Requests {
                 .build();
     }
 
-    public static Command mapDeleteRequest(
+    public static DeleteRangeRequest.Builder mapDeleteRequest(
             ByteSequence key, DeleteOption option, ByteSequence namespace) {
-        DeleteRangeRequest.Builder builder =
-                DeleteRangeRequest.newBuilder()
-                        .setKey(Util.prefixNamespace(key, namespace))
-                        .setPrevKv(option.isPrevKV());
+        return DeleteRangeRequest.newBuilder()
+                .setKey(Util.prefixNamespace(key, namespace))
+                .setPrevKv(option.isPrevKV());
+    }
 
+    public static Command mapDeleteCommand(
+            ByteSequence key, DeleteOption option, ByteSequence namespace) {
+        DeleteRangeRequest.Builder builder = mapDeleteRequest(key, option, namespace);
         defineRangeRequestEnd(
                 key, option.getEndKey(), option.isPrefix(), namespace, builder::setRangeEnd);
 
