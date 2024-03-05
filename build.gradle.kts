@@ -2,7 +2,7 @@ import com.adarshr.gradle.testlogger.TestLoggerExtension
 import com.adarshr.gradle.testlogger.theme.ThemeType
 
 group = "cloud.xline"
-version = "1.0-SNAPSHOT"
+version = "0.1.0-SNAPSHOT"
 
 buildscript {
     repositories {
@@ -27,6 +27,7 @@ subprojects {
     apply(plugin = "java-library")
     apply(plugin = "org.gradle.test-retry")
     apply(plugin = "com.adarshr.test-logger")
+    apply(plugin = "maven-publish")
 
     tasks {
         named<JavaCompile>("compileJava") {
@@ -47,8 +48,26 @@ subprojects {
         }
     }
 
-    extensions.getByType<TestLoggerExtension>().apply {
+    configure<PublishingExtension> {
+        publications {
+            create<MavenPublication>("maven") {
+                groupId = rootProject.group.toString()
+                version = rootProject.version.toString()
+
+                from(components["java"])
+
+            }
+        }
+    }
+
+    configure<JavaPluginExtension> {
+        withSourcesJar()
+        withJavadocJar()
+    }
+
+    configure<TestLoggerExtension> {
         theme = ThemeType.MOCHA_PARALLEL
         showStandardStreams = false
     }
+
 }
