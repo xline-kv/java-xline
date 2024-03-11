@@ -38,7 +38,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Start the cluster
-        run: ./scripts/quick_start.sh
+        run: docker compose -f ci/docker-compose.yml up -d
 
       - name: Run test
         run: ./gradlew test

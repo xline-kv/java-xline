@@ -10,9 +10,9 @@ import static org.assertj.core.api.Assertions.*;
 
 @Timeout(value = 20)
 public class ProtocolTest {
-    static ProtocolClient client;
+    private static ProtocolClient client;
 
-    static String INIT_ENDPOINT = "http://172.20.0.5:2379";
+    private static final String INIT_ENDPOINT = "http://127.0.0.1:2379";
 
     @BeforeAll
     static void onConnect() {
