@@ -1,6 +1,12 @@
 package cloud.xline.jxline;
 
-public interface Client extends io.etcd.jetcd.Client {
+public interface Client {
+
+    ProtocolClient getProtocolClient();
+
+    Auth getAuthClient();
+
+    KV getKVClient();
 
     /**
      * Override the jetcd.cloud.xline.client.Client.builder

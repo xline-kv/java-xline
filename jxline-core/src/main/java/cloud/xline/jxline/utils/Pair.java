@@ -1,12 +1,13 @@
 package cloud.xline.jxline.utils;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
 
 public final class Pair<A, B> {
     final A a;
     final B b;
 
-    Pair(A a, B b) {
+    public Pair(A a, B b) {
         this.a = Objects.requireNonNull(a);
         this.b = Objects.requireNonNull(b);
     }
@@ -28,6 +29,10 @@ public final class Pair<A, B> {
             return a.equals(e.getFirst()) && b.equals(e.getSecond());
         }
         return false;
+    }
+
+    public <T> T apply(BiFunction<A, B, T> fn) {
+        return fn.apply(a, b);
     }
 
     @Override

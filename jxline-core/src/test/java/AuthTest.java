@@ -1,0 +1,152 @@
+import cloud.xline.jxline.Auth;
+import cloud.xline.jxline.Client;
+import cloud.xline.jxline.ClientBuilder;
+import cloud.xline.jxline.KV;
+import cloud.xline.jxline.auth.AuthRoleListResponse;
+import cloud.xline.jxline.auth.Permission;
+import io.etcd.jetcd.ByteSequence;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+import java.util.List;
+
+import static utils.Utils.*;
+import static org.assertj.core.api.Assertions.*;
+
+@Timeout(value = 20)
+public class AuthTest {
+    private static ClientBuilder clientBuilder;
+
+    private static final String INIT_ENDPOINT = "http://127.0.0.1:2379";
+
+    private static final String rootString = "root";
+    private static final ByteSequence rootPass = bytesOf("123");
+    private static final String rootRoleString = "root";
+    private static final String userString = "user";
+    private static final String userRoleString = "userRole";
+    private static Auth authDisabledAuthClient;
+    private static KV authDisabledKVClient;
+    private final ByteSequence rootRoleKey = bytesOf("root");
+    private final ByteSequence rootRoleValue = bytesOf("b");
+    private final ByteSequence rootRoleKeyRangeBegin = bytesOf("root");
+    private final ByteSequence rootRoleKeyRangeEnd = bytesOf("root1");
+    private final ByteSequence userRoleKey = bytesOf("foo");
+    private final ByteSequence userRoleValue = bytesOf("bar");
+    private final ByteSequence userRoleKeyRangeBegin = bytesOf("foo");
+    private final ByteSequence userRoleKeyRangeEnd = bytesOf("foo1");
+    private final ByteSequence root = bytesOf(rootString);
+    private final ByteSequence rootRole = bytesOf(rootRoleString);
+    private final ByteSequence user = bytesOf(userString);
+    private final ByteSequence userPass = bytesOf("userPass");
+    private final ByteSequence userNewPass = bytesOf("newUserPass");
+    private final ByteSequence userRole = bytesOf(userRoleString);
+
+    @BeforeAll
+    static void onConnect() {
+        clientBuilder = Client.builder().endpoints(INIT_ENDPOINT);
+        Client clientNoAuth = clientBuilder.build();
+        authDisabledKVClient = clientNoAuth.getKVClient();
+        authDisabledAuthClient = clientNoAuth.getAuthClient();
+    }
+
+    @Test
+    public void testAuth() throws Exception {
+        authDisabledAuthClient.roleAdd(rootRole).get();
+        authDisabledAuthClient.roleAdd(userRole).get();
+
+        final AuthRoleListResponse response = authDisabledAuthClient.roleList().get();
+        assertThat(response.getRoles()).containsOnly(rootRoleString, userRoleString);
+
+        authDisabledAuthClient
+                .roleGrantPermission(
+                        rootRole,
+                        rootRoleKeyRangeBegin,
+                        rootRoleKeyRangeEnd,
+                        Permission.Type.READWRITE)
+                .get();
+        authDisabledAuthClient
+                .roleGrantPermission(
+                        userRole,
+                        userRoleKeyRangeBegin,
+                        userRoleKeyRangeEnd,
+                        Permission.Type.READWRITE)
+                .get();
+
+        authDisabledAuthClient.userAdd(root, rootPass).get();
+        authDisabledAuthClient.userAdd(user, userPass).get();
+
+        authDisabledAuthClient.userChangePassword(user, userNewPass).get();
+
+        List<String> users = authDisabledAuthClient.userList().get().getUsers();
+        assertThat(users).containsOnly(rootString, userString);
+
+        authDisabledAuthClient.userGrantRole(root, rootRole).get();
+        authDisabledAuthClient.userGrantRole(user, rootRole).get();
+        authDisabledAuthClient.userGrantRole(user, userRole).get();
+
+        assertThat(authDisabledAuthClient.userGet(root).get().getRoles())
+                .containsOnly(rootRoleString);
+        assertThat(authDisabledAuthClient.userGet(user).get().getRoles())
+                .containsOnly(rootRoleString, userRoleString);
+
+        //  TODO:
+        //   There are significant changes to the auth in version 0.7.0, and currently it does
+        //   not support the authed client implementation of version 0.6.1.
+        //   The current modification should support version 0.7.0.
+
+        //        authDisabledAuthClient.authEnable().get();
+        //
+        //        final Client userClient = clientBuilder.user(user).password(userNewPass).build();
+        //        final Client rootClient = clientBuilder.user(root).password(rootPass).build();
+        //
+        //        userClient.getKVClient().put(rootRoleKey, rootRoleValue).get();
+        //        userClient.getKVClient().put(userRoleKey, userRoleValue).get();
+        //        userClient.getKVClient().get(rootRoleKey).get();
+        //        userClient.getKVClient().get(userRoleKey).get();
+        //
+        //        assertThatThrownBy(() -> authDisabledKVClient.put(rootRoleKey,
+        // rootRoleValue).get())
+        //                .hasMessageContaining("etcdserver: user name is empty");
+        //        assertThatThrownBy(() -> authDisabledKVClient.put(userRoleKey,
+        // rootRoleValue).get())
+        //                .hasMessageContaining("etcdserver: user name is empty");
+        //        assertThatThrownBy(() -> authDisabledKVClient.get(rootRoleKey).get())
+        //                .hasMessageContaining("etcdserver: user name is empty");
+        //        assertThatThrownBy(() -> authDisabledKVClient.get(userRoleKey).get())
+        //                .hasMessageContaining("etcdserver: user name is empty");
+        //
+        //        AuthRoleGetResponse roleGetResponse =
+        // userClient.getAuthClient().roleGet(rootRole).get();
+        //        assertThat(roleGetResponse.getPermissions().size()).isNotEqualTo(0);
+        //
+        //        roleGetResponse = userClient.getAuthClient().roleGet(userRole).get();
+        //        assertThat(roleGetResponse.getPermissions().size()).isNotEqualTo(0);
+        //
+        //        rootClient.getAuthClient().userRevokeRole(user, rootRole).get();
+        //
+        //        final KV kvClient = userClient.getKVClient();
+        //        // verify the access to root role is revoked for user.
+        //        assertThatThrownBy(() -> kvClient.get(rootRoleKey).get()).isNotNull();
+        //        // verify userRole is still valid.
+        //        assertThat(kvClient.get(userRoleKey).get().getCount()).isNotEqualTo(0);
+        //
+        //        rootClient
+        //                .getAuthClient()
+        //                .roleRevokePermission(userRole, userRoleKeyRangeBegin,
+        // userRoleKeyRangeEnd)
+        //                .get();
+        //
+        //        // verify the access to foo is revoked for user.
+        //        assertThatThrownBy(() ->
+        // userClient.getKVClient().get(userRoleKey).get()).isNotNull();
+        //
+        //        rootClient.getAuthClient().authDisable().get();
+        //
+        //        authDisabledAuthClient.userDelete(root).get();
+        //        authDisabledAuthClient.userDelete(user).get();
+        //
+        //        authDisabledAuthClient.roleDelete(rootRole).get();
+        //        authDisabledAuthClient.roleDelete(userRole).get();
+    }
+}

@@ -1,54 +1,41 @@
 package cloud.xline.jxline.impl;
 
-import cloud.xline.jxline.Client;
-import cloud.xline.jxline.ClientBuilder;
+import cloud.xline.jxline.*;
 
-import io.etcd.jetcd.*;
+import io.etcd.jetcd.support.MemorizingClientSupplier;
 
 public final class ClientImpl implements Client {
 
-    public ClientImpl(ClientBuilder clientBuilder) {}
+    private final ClientConnectionManager manager;
+
+    private final ProtocolClient protocolClient;
+
+    private final MemorizingClientSupplier<KV> kvClient;
+
+    private final MemorizingClientSupplier<Auth> authClient;
+
+    public ClientImpl(ClientBuilder clientBuilder) {
+        this.manager = new ClientConnectionManager(clientBuilder);
+        this.protocolClient = new ProtocolClientImpl(this.manager);
+        this.kvClient =
+                new MemorizingClientSupplier<>(() -> new KVImpl(this.protocolClient, this.manager));
+        this.authClient =
+                new MemorizingClientSupplier<>(
+                        () -> new AuthImpl(this.protocolClient, this.manager));
+    }
 
     @Override
-    public Auth getAuthClient() {
-        return null;
+    public ProtocolClient getProtocolClient() {
+        return this.protocolClient;
     }
 
     @Override
     public KV getKVClient() {
-        return null;
+        return this.kvClient.get();
     }
 
     @Override
-    public Cluster getClusterClient() {
-        return null;
+    public Auth getAuthClient() {
+        return this.authClient.get();
     }
-
-    @Override
-    public Maintenance getMaintenanceClient() {
-        return null;
-    }
-
-    @Override
-    public Lease getLeaseClient() {
-        return null;
-    }
-
-    @Override
-    public Watch getWatchClient() {
-        return null;
-    }
-
-    @Override
-    public Lock getLockClient() {
-        return null;
-    }
-
-    @Override
-    public Election getElectionClient() {
-        return null;
-    }
-
-    @Override
-    public void close() {}
 }
