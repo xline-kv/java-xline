@@ -5,12 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import cloud.xline.jxline.Txn;
 import cloud.xline.jxline.kv.TxnResponse;
-import com.xline.protobuf.Command;
-import com.xline.protobuf.RequestWithToken;
-import com.xline.protobuf.TxnRequest;
+import com.xline.protobuf.*;
 import io.etcd.jetcd.ByteSequence;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -108,8 +107,55 @@ public class TxnImpl implements Txn {
             requestBuilder.addFailure(o.toRequestOp(namespace));
         }
 
+        TxnRequest txnReq = requestBuilder.build();
+
         return Command.newBuilder()
-                .setRequest(RequestWithToken.newBuilder().setTxnRequest(requestBuilder).build())
+                .addAllKeys(getTxnReqKeyRanges(txnReq))
+                .setRequest(RequestWithToken.newBuilder().setTxnRequest(txnReq).build())
                 .build();
+    }
+
+    private static List<KeyRange> getTxnReqKeyRanges(TxnRequest req) {
+        List<KeyRange> keyRanges = new ArrayList<>();
+        req.getCompareList()
+                .forEach(
+                        cmp ->
+                                keyRanges.add(
+                                        KeyRange.newBuilder()
+                                                .setKey(cmp.getKey())
+                                                .setRangeEnd(cmp.getRangeEnd())
+                                                .build()));
+        Stream.concat(req.getSuccessList().stream(), req.getFailureList().stream())
+                .forEach(
+                        op -> {
+                            if (op.hasRequestRange()) {
+                                keyRanges.add(
+                                        KeyRange.newBuilder()
+                                                .setKey(op.getRequestRange().getKey())
+                                                .setRangeEnd(op.getRequestRange().getRangeEnd())
+                                                .build());
+                                return;
+                            }
+                            if (op.hasRequestPut()) {
+                                keyRanges.add(
+                                        KeyRange.newBuilder()
+                                                .setKey(op.getRequestPut().getKey())
+                                                .build());
+                                return;
+                            }
+                            if (op.hasRequestDeleteRange()) {
+                                keyRanges.add(
+                                        KeyRange.newBuilder()
+                                                .setKey(op.getRequestDeleteRange().getKey())
+                                                .setRangeEnd(
+                                                        op.getRequestDeleteRange().getRangeEnd())
+                                                .build());
+                                return;
+                            }
+                            if (op.hasRequestTxn()) {
+                                keyRanges.addAll(getTxnReqKeyRanges(op.getRequestTxn()));
+                            }
+                        });
+        return keyRanges;
     }
 }

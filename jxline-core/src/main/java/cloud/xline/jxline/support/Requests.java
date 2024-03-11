@@ -25,7 +25,7 @@ public final class Requests {
             ByteSequence key, ByteSequence value, PutOption option, ByteSequence namespace) {
         PutRequest req = mapPutRequest(key, value, option, namespace);
         return Command.newBuilder()
-                .addKeys(KeyRange.newBuilder().setKey(ByteString.copyFrom(key.getBytes())).build())
+                .addKeys(KeyRange.newBuilder().setKey(Util.prefixNamespace(key, namespace)))
                 .setRequest(
                         RequestWithToken.newBuilder().setPutRequest(req).build()) // TODO: add token
                 .build();
@@ -51,11 +51,20 @@ public final class Requests {
     public static Command mapRangeCommand(
             ByteSequence key, GetOption option, ByteSequence namespace) {
         RangeRequest.Builder builder = mapRangeRequest(key, option, namespace);
+        KeyRange.Builder keyRange =
+                KeyRange.newBuilder().setKey(Util.prefixNamespace(key, namespace));
 
         defineRangeRequestEnd(
-                key, option.getEndKey(), option.isPrefix(), namespace, builder::setRangeEnd);
+                key,
+                option.getEndKey(),
+                option.isPrefix(),
+                namespace,
+                endKey -> {
+                    builder.setRangeEnd(endKey);
+                    keyRange.setRangeEnd(endKey);
+                });
         return Command.newBuilder()
-                .addKeys(KeyRange.newBuilder().setKey(ByteString.copyFrom(key.getBytes())).build())
+                .addKeys(keyRange)
                 .setRequest(
                         RequestWithToken.newBuilder()
                                 .setRangeRequest(builder.build())
@@ -73,11 +82,20 @@ public final class Requests {
     public static Command mapDeleteCommand(
             ByteSequence key, DeleteOption option, ByteSequence namespace) {
         DeleteRangeRequest.Builder builder = mapDeleteRequest(key, option, namespace);
-        defineRangeRequestEnd(
-                key, option.getEndKey(), option.isPrefix(), namespace, builder::setRangeEnd);
+        KeyRange.Builder keyRange =
+                KeyRange.newBuilder().setKey(Util.prefixNamespace(key, namespace));
 
+        defineRangeRequestEnd(
+                key,
+                option.getEndKey(),
+                option.isPrefix(),
+                namespace,
+                endKey -> {
+                    builder.setRangeEnd(endKey);
+                    keyRange.setRangeEnd(endKey);
+                });
         return Command.newBuilder()
-                .addKeys(KeyRange.newBuilder().setKey(ByteString.copyFrom(key.getBytes())).build())
+                .addKeys(keyRange)
                 .setRequest(
                         RequestWithToken.newBuilder()
                                 .setDeleteRangeRequest(builder.build())
