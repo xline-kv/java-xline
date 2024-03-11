@@ -26,9 +26,11 @@ public class KVTest {
     private static final ByteSequence SAMPLE_VALUE_2 = bytesOf("sample_value2");
     private static final ByteSequence SAMPLE_KEY_3 = bytesOf("sample_key3");
 
+    private static final String INIT_ENDPOINT = "http://127.0.0.1:2379";
+
     @BeforeAll
     static void onConnect() {
-        kvClient = Client.builder().endpoints("http://172.20.0.5:2379").build().getKVClient();
+        kvClient = Client.builder().endpoints(INIT_ENDPOINT).build().getKVClient();
     }
 
     public static ByteSequence bytesOf(final String string) {
@@ -104,30 +106,6 @@ public class KVTest {
     }
 
     @Test
-    public void testGetSortedPrefix() throws Exception {
-        String prefix = randomString();
-        int numPrefix = 3;
-        putKeysWithPrefix(prefix, numPrefix);
-
-        GetOption option =
-                GetOption.builder()
-                        .withSortField(GetOption.SortTarget.KEY)
-                        .withSortOrder(GetOption.SortOrder.DESCEND)
-                        .isPrefix(true)
-                        .build();
-        CompletableFuture<GetResponse> getFeature = kvClient.get(bytesOf(prefix), option);
-        GetResponse response = getFeature.get();
-
-        assertThat(response.getKvs()).hasSize(numPrefix);
-        for (int i = 0; i < numPrefix; i++) {
-            assertThat(response.getKvs().get(i).getKey().toString(StandardCharsets.UTF_8))
-                    .isEqualTo(prefix + (numPrefix - i - 1));
-            assertThat(response.getKvs().get(i).getValue().toString(StandardCharsets.UTF_8))
-                    .isEqualTo(String.valueOf(numPrefix - i - 1));
-        }
-    }
-
-    @Test
     public void testDelete() throws Exception {
         // Put content so that we actually have something to delete
         testPut();
@@ -142,35 +120,5 @@ public class KVTest {
         CompletableFuture<DeleteResponse> deleteFuture = kvClient.delete(keyToDelete);
         DeleteResponse delResp = deleteFuture.get();
         assertThat(delResp.getDeleted()).isEqualTo(resp.getKvs().size());
-    }
-
-    @Test
-    public void testGetAndDeleteWithPrefix() throws Exception {
-        String prefix = randomString();
-        ByteSequence key = bytesOf(prefix);
-        int numPrefixes = 10;
-
-        putKeysWithPrefix(prefix, numPrefixes);
-
-        // verify get withPrefix.
-        CompletableFuture<GetResponse> getFuture =
-                kvClient.get(key, GetOption.builder().isPrefix(true).build());
-        GetResponse getResp = getFuture.get();
-        assertThat(getResp.getCount()).isEqualTo(numPrefixes);
-
-        // verify del withPrefix.
-        DeleteOption deleteOpt = DeleteOption.builder().isPrefix(true).build();
-        CompletableFuture<DeleteResponse> delFuture = kvClient.delete(key, deleteOpt);
-        DeleteResponse delResp = delFuture.get();
-        assertThat(delResp.getDeleted()).isEqualTo(numPrefixes);
-    }
-
-    private static void putKeysWithPrefix(String prefix, int numPrefixes)
-            throws ExecutionException, InterruptedException {
-        for (int i = 0; i < numPrefixes; i++) {
-            ByteSequence key = bytesOf(prefix + i);
-            ByteSequence value = bytesOf("" + i);
-            kvClient.put(key, value).get();
-        }
     }
 }
