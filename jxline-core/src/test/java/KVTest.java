@@ -1,11 +1,17 @@
 import cloud.xline.jxline.Client;
 import cloud.xline.jxline.KV;
+import cloud.xline.jxline.Txn;
 import cloud.xline.jxline.kv.DeleteResponse;
 import cloud.xline.jxline.kv.GetResponse;
 import cloud.xline.jxline.kv.PutResponse;
+import cloud.xline.jxline.kv.TxnResponse;
+import cloud.xline.jxline.op.Cmp;
+import cloud.xline.jxline.op.CmpTarget;
+import cloud.xline.jxline.op.Op;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
+import io.etcd.jetcd.options.PutOption;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -13,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -120,5 +127,111 @@ public class KVTest {
         CompletableFuture<DeleteResponse> deleteFuture = kvClient.delete(keyToDelete);
         DeleteResponse delResp = deleteFuture.get();
         assertThat(delResp.getDeleted()).isEqualTo(resp.getKvs().size());
+    }
+
+    @Test
+    public void testGetSortedPrefix() throws Exception {
+        String prefix = randomString();
+        int numPrefix = 3;
+        putKeysWithPrefix(prefix, numPrefix);
+
+        GetOption option =
+                GetOption.builder()
+                        .withSortField(GetOption.SortTarget.KEY)
+                        .withSortOrder(GetOption.SortOrder.DESCEND)
+                        .isPrefix(true)
+                        .build();
+        CompletableFuture<GetResponse> getFeature = kvClient.get(bytesOf(prefix), option);
+        GetResponse response = getFeature.get();
+
+        assertThat(response.getKvs()).hasSize(numPrefix);
+        for (int i = 0; i < numPrefix; i++) {
+            assertThat(response.getKvs().get(i).getKey().toString(StandardCharsets.UTF_8))
+                    .isEqualTo(prefix + (numPrefix - i - 1));
+            assertThat(response.getKvs().get(i).getValue().toString(StandardCharsets.UTF_8))
+                    .isEqualTo(String.valueOf(numPrefix - i - 1));
+        }
+    }
+
+    @Test
+    public void testGetAndDeleteWithPrefix() throws Exception {
+        String prefix = randomString();
+        ByteSequence key = bytesOf(prefix);
+        int numPrefixes = 10;
+
+        putKeysWithPrefix(prefix, numPrefixes);
+
+        // verify get withPrefix.
+        CompletableFuture<GetResponse> getFuture =
+                kvClient.get(key, GetOption.builder().isPrefix(true).build());
+        GetResponse getResp = getFuture.get();
+        assertThat(getResp.getCount()).isEqualTo(numPrefixes);
+
+        // verify del withPrefix.
+        DeleteOption deleteOpt = DeleteOption.builder().isPrefix(true).build();
+        CompletableFuture<DeleteResponse> delFuture = kvClient.delete(key, deleteOpt);
+        DeleteResponse delResp = delFuture.get();
+        assertThat(delResp.getDeleted()).isEqualTo(numPrefixes);
+    }
+
+    private static void putKeysWithPrefix(String prefix, int numPrefixes)
+            throws ExecutionException, InterruptedException {
+        for (int i = 0; i < numPrefixes; i++) {
+            ByteSequence key = bytesOf(prefix + i);
+            ByteSequence value = bytesOf("" + i);
+            kvClient.put(key, value).get();
+        }
+    }
+
+    @Test
+    public void testTxn() throws Exception {
+        ByteSequence sampleKey = bytesOf("txn_key");
+        ByteSequence sampleValue = bytesOf("xyz");
+        ByteSequence cmpValue = bytesOf("abc");
+        ByteSequence putValue = bytesOf("XYZ");
+        ByteSequence putValueNew = bytesOf("ABC");
+        // put the original txn key value pair
+        kvClient.put(sampleKey, sampleValue).get();
+
+        // construct txn operation
+        Txn txn = kvClient.txn();
+        Cmp cmp = new Cmp(sampleKey, Cmp.Op.GREATER, CmpTarget.value(cmpValue));
+        CompletableFuture<TxnResponse> txnResp =
+                txn.If(cmp)
+                        .Then(Op.put(sampleKey, putValue, PutOption.DEFAULT))
+                        .Else(Op.put(sampleKey, putValueNew, PutOption.DEFAULT))
+                        .commit();
+        txnResp.get();
+        // get the value
+        GetResponse getResp = kvClient.get(sampleKey).get();
+        assertThat(getResp.getKvs()).hasSize(1);
+        assertThat(getResp.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8))
+                .isEqualTo(putValue.toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void testTxnForCmpOpNotEqual() throws Exception {
+        ByteSequence sampleKey = bytesOf("txn_key");
+        ByteSequence sampleValue = bytesOf("xyz");
+        ByteSequence cmpValue = bytesOf("abc");
+        ByteSequence putValue = bytesOf("XYZ");
+        ByteSequence putValueNew = bytesOf("ABC");
+        // put the original txn key value pair
+        kvClient.put(sampleKey, sampleValue).get();
+
+        // construct txn operation
+        Txn txn = kvClient.txn();
+        Cmp cmp = new Cmp(sampleKey, Cmp.Op.NOT_EQUAL, CmpTarget.value(cmpValue));
+        CompletableFuture<TxnResponse> txnResp =
+                txn.If(cmp)
+                        .Then(Op.put(sampleKey, putValue, PutOption.DEFAULT))
+                        .Else(Op.put(sampleKey, putValueNew, PutOption.DEFAULT))
+                        .commit();
+        txnResp.get();
+        // get the value
+        GetResponse getResp = kvClient.get(sampleKey).get();
+        assertThat(getResp.getKvs()).hasSize(1);
+        assertThat(getResp.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8))
+                .isEqualTo(putValue.toString(StandardCharsets.UTF_8));
     }
 }
