@@ -252,6 +252,10 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
         return quorum(size) / 2 + 1;
     }
 
+    static final int RETRY_TIMEOUT = 3;
+    static final int RETRY_LIMIT = 5;
+
+    // TODO: Need to be refactored within retry policy...
     State getInitState() {
         ManagedChannel initChannel = this.connectionManager().getInitChannel();
         VertxProtocolGrpc.ProtocolVertxStub initStub = VertxProtocolGrpc.newVertxStub(initChannel);
@@ -261,11 +265,13 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
         int retries = -1;
         do {
             retries++;
-            if (retries > 5) {
+            if (retries > RETRY_LIMIT) {
                 throw new RuntimeException("connection failed");
             }
             try {
-                response = completable(initStub.fetchCluster(request)).get(3, TimeUnit.SECONDS);
+                response =
+                        completable(initStub.fetchCluster(request))
+                                .get(RETRY_TIMEOUT, TimeUnit.SECONDS);
             } catch (Exception e) {
                 logger().warn("fetch cluster failed, " + e);
             }
