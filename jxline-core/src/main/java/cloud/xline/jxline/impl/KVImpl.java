@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.util.Objects.requireNonNull;
 
-public class KVImpl extends Impl implements KV {
+class KVImpl extends Impl implements KV {
 
     private final ProtocolClient protocolClient;
 

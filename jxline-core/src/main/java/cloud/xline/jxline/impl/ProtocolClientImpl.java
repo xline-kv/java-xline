@@ -372,8 +372,8 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
                 if (res.hasLeaderId() && this.term < res.getTerm()) {
                     this.term = res.getTerm();
                     this.leaderId = res.getLeaderId();
-                    logger().info("client term updates to " + this.term);
-                    logger().info("client leader id updates to " + this.leaderId);
+                    logger().info("client term updates to {}", this.term);
+                    logger().info("client leader id updates to {}", this.leaderId);
                 }
                 if (res.getClusterVersion() == this.clusterVersion) {
                     return;
