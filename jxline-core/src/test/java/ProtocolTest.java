@@ -5,15 +5,18 @@ import com.xline.protobuf.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+
 import static org.assertj.core.api.Assertions.*;
 
 @Timeout(value = 20)
 public class ProtocolTest {
     static ProtocolClient client;
 
+    static String INIT_ENDPOINT = "http://172.20.0.5:2379";
+
     @BeforeAll
     static void onConnect() {
-        client = Client.builder().endpoints("http://172.20.0.5:2379").build().getProtocolClient();
+        client = Client.builder().endpoints(INIT_ENDPOINT).build().getProtocolClient();
     }
 
     @Test

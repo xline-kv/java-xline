@@ -252,6 +252,7 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
         return quorum(size) / 2 + 1;
     }
 
+    // TODO: Need to be refactored within retry policy...
     State getInitState() {
         ManagedChannel initChannel = this.connectionManager().getInitChannel();
         VertxProtocolGrpc.ProtocolVertxStub initStub = VertxProtocolGrpc.newVertxStub(initChannel);
