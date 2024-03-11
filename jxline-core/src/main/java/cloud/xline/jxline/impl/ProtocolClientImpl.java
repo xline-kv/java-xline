@@ -263,8 +263,8 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
 
     // TODO: Need to be refactored within retry policy...
     State getInitState() {
-        ManagedChannel initChannel = this.connectionManager().getInitChannel();
-        VertxProtocolGrpc.ProtocolVertxStub initStub = VertxProtocolGrpc.newVertxStub(initChannel);
+        VertxProtocolGrpc.ProtocolVertxStub initStub =
+                connectionManager().newStub(VertxProtocolGrpc::newVertxStub);
         FetchClusterResponse response = null;
         FetchClusterRequest request =
                 FetchClusterRequest.newBuilder().setLinearizable(false).build();
@@ -302,7 +302,8 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
                             IPNameResolver.SCHEME, authority != null ? authority : "", target);
 
             ManagedChannel channel = connectionManager().defaultChannelBuilder(ips).build();
-            VertxProtocolGrpc.ProtocolVertxStub stub = VertxProtocolGrpc.newVertxStub(channel);
+            VertxProtocolGrpc.ProtocolVertxStub stub =
+                    connectionManager().newStub(VertxProtocolGrpc::newVertxStub, channel);
             stubs.put(member.getId(), stub);
         }
 
@@ -397,7 +398,7 @@ class ProtocolClientImpl extends Impl implements ProtocolClient {
 
                     ManagedChannel channel = connectionManager().defaultChannelBuilder(ips).build();
                     VertxProtocolGrpc.ProtocolVertxStub stub =
-                            VertxProtocolGrpc.newVertxStub(channel);
+                            connectionManager().newStub(VertxProtocolGrpc::newVertxStub, channel);
                     stubs.put(member.getId(), stub);
                 }
                 // TODO: do NOT drop the old stubs, instead modify the stubs (use ConcurrentHashMap)

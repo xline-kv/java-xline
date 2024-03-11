@@ -16,10 +16,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import static org.assertj.core.api.Assertions.*;
+import static utils.Utils.*;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -40,16 +40,8 @@ public class KVTest {
         kvClient = Client.builder().endpoints(INIT_ENDPOINT).build().getKVClient();
     }
 
-    public static ByteSequence bytesOf(final String string) {
-        return ByteSequence.from(string, StandardCharsets.UTF_8);
-    }
-
-    public static String randomString() {
-        return java.util.UUID.randomUUID().toString();
-    }
-
     @Test
-    void testItWorks() throws Exception {
+    public void testItWorks() throws Exception {
         ByteSequence key = ByteSequence.from("Hello Xline", Charset.defaultCharset());
         ByteSequence value = ByteSequence.from("Hi", Charset.defaultCharset());
         PutResponse putResponse = kvClient.put(key, value).get();

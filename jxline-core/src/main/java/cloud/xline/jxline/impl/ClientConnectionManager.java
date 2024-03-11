@@ -19,6 +19,7 @@ final class ClientConnectionManager {
     private final Object lock;
     private final ClientBuilder builder;
     private final ExecutorService executorService;
+    private final AuthCredential credential;
     private volatile Vertx vertx;
 
     /// Integrated channel
@@ -27,6 +28,7 @@ final class ClientConnectionManager {
     ClientConnectionManager(ClientBuilder builder) {
         this.lock = new Object();
         this.builder = builder;
+        this.credential = new AuthCredential(this);
 
         if (builder.executorService() == null) {
             ThreadFactory backingThreadFactory = Executors.defaultThreadFactory();
@@ -171,11 +173,21 @@ final class ClientConnectionManager {
         return newStub(supplier, this.getInitChannel());
     }
 
-    private <T extends AbstractStub<T>> T newStub(
+    /**
+     * Create stub with a provided channel.
+     *
+     * @param stubCustomizer supplier the stub supplier
+     * @param channel the channel
+     * @return the attached stub
+     */
+    <T extends AbstractStub<T>> T newStub(
             Function<ManagedChannel, T> stubCustomizer, ManagedChannel channel) {
         T stub = stubCustomizer.apply(channel);
         if (builder.waitForReady()) {
             stub = stub.withWaitForReady();
+        }
+        if (builder.user() != null && builder.password() != null) {
+            stub = stub.withCallCredentials(this.credential);
         }
         return stub;
     }

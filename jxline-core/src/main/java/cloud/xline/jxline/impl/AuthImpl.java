@@ -30,9 +30,12 @@ public class AuthImpl extends Impl implements Auth {
 
     private final ProtocolClient protocolClient;
 
+    private final VertxAuthGrpc.AuthVertxStub authStub;
+
     AuthImpl(ProtocolClient protocolClient, ClientConnectionManager connectionManager) {
         super(connectionManager);
         this.protocolClient = protocolClient;
+        this.authStub = connectionManager.newStub(VertxAuthGrpc::newVertxStub);
     }
 
     @Override
@@ -42,7 +45,7 @@ public class AuthImpl extends Impl implements Auth {
                 Command.newBuilder()
                         .setRequest(RequestWithToken.newBuilder().setAuthEnableRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthEnableResponse::new);
+        return protocolClient.propose(command, false, AuthEnableResponse::new);
     }
 
     @Override
@@ -52,7 +55,7 @@ public class AuthImpl extends Impl implements Auth {
                 Command.newBuilder()
                         .setRequest(RequestWithToken.newBuilder().setAuthDisableRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthDisableResponse::new);
+        return protocolClient.propose(command, false, AuthDisableResponse::new);
     }
 
     @Override
@@ -66,11 +69,7 @@ public class AuthImpl extends Impl implements Auth {
                         .setNameBytes(ByteString.copyFrom(user.getBytes()))
                         .setPasswordBytes(ByteString.copyFrom(password.getBytes()))
                         .build();
-        Command command =
-                Command.newBuilder()
-                        .setRequest(RequestWithToken.newBuilder().setAuthUserAddRequest(req))
-                        .build();
-        return protocolClient.propose(command, true, AuthUserAddResponse::new);
+        return completable(authStub.userAdd(req), AuthUserAddResponse::new);
     }
 
     @Override
@@ -82,7 +81,7 @@ public class AuthImpl extends Impl implements Auth {
                 Command.newBuilder()
                         .setRequest(RequestWithToken.newBuilder().setAuthUserDeleteRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthUserDeleteResponse::new);
+        return protocolClient.propose(command, false, AuthUserDeleteResponse::new);
     }
 
     @Override
@@ -96,12 +95,7 @@ public class AuthImpl extends Impl implements Auth {
                         .setNameBytes(ByteString.copyFrom(user.getBytes()))
                         .setPasswordBytes(ByteString.copyFrom(password.getBytes()))
                         .build();
-        Command command =
-                Command.newBuilder()
-                        .setRequest(
-                                RequestWithToken.newBuilder().setAuthUserChangePasswordRequest(req))
-                        .build();
-        return protocolClient.propose(command, true, AuthUserChangePasswordResponse::new);
+        return completable(authStub.userChangePassword(req), AuthUserChangePasswordResponse::new);
     }
 
     @Override
@@ -144,7 +138,7 @@ public class AuthImpl extends Impl implements Auth {
                 Command.newBuilder()
                         .setRequest(RequestWithToken.newBuilder().setAuthUserGrantRoleRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthUserGrantRoleResponse::new);
+        return protocolClient.propose(command, false, AuthUserGrantRoleResponse::new);
     }
 
     @Override
@@ -162,7 +156,7 @@ public class AuthImpl extends Impl implements Auth {
                 Command.newBuilder()
                         .setRequest(RequestWithToken.newBuilder().setAuthUserRevokeRoleRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthUserRevokeRoleResponse::new);
+        return protocolClient.propose(command, false, AuthUserRevokeRoleResponse::new);
     }
 
     @Override
@@ -177,7 +171,7 @@ public class AuthImpl extends Impl implements Auth {
                 Command.newBuilder()
                         .setRequest(RequestWithToken.newBuilder().setAuthRoleAddRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthRoleAddResponse::new);
+        return protocolClient.propose(command, false, AuthRoleAddResponse::new);
     }
 
     @Override
@@ -221,7 +215,7 @@ public class AuthImpl extends Impl implements Auth {
                                 RequestWithToken.newBuilder()
                                         .setAuthRoleGrantPermissionRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthRoleGrantPermissionResponse::new);
+        return protocolClient.propose(command, false, AuthRoleGrantPermissionResponse::new);
     }
 
     @Override
@@ -268,7 +262,7 @@ public class AuthImpl extends Impl implements Auth {
                                 RequestWithToken.newBuilder()
                                         .setAuthRoleRevokePermissionRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthRoleRevokePermissionResponse::new);
+        return protocolClient.propose(command, false, AuthRoleRevokePermissionResponse::new);
     }
 
     @Override
@@ -283,6 +277,6 @@ public class AuthImpl extends Impl implements Auth {
                 Command.newBuilder()
                         .setRequest(RequestWithToken.newBuilder().setAuthRoleDeleteRequest(req))
                         .build();
-        return protocolClient.propose(command, true, AuthRoleDeleteResponse::new);
+        return protocolClient.propose(command, false, AuthRoleDeleteResponse::new);
     }
 }
