@@ -70,6 +70,15 @@ final class ClientConnectionManager {
         }
     }
 
+    /**
+     * Get auth credential
+     *
+     * @return auth credential
+     */
+    public AuthCredential authCredential() {
+        return credential;
+    }
+
     ManagedChannelBuilder<?> defaultChannelBuilder() {
         return defaultChannelBuilder(builder.target());
     }

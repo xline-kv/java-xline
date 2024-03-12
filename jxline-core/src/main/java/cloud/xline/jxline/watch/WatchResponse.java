@@ -19,25 +19,25 @@ package cloud.xline.jxline.watch;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cloud.xline.jxline.KeyValue;
+import cloud.xline.jxline.impl.AbstractResponse;
+import com.xline.protobuf.Event;
 import io.etcd.jetcd.ByteSequence;
-import io.etcd.jetcd.KeyValue;
-import io.etcd.jetcd.api.Event;
-import io.etcd.jetcd.impl.AbstractResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class WatchResponse extends AbstractResponse<io.etcd.jetcd.api.WatchResponse> {
+public class WatchResponse extends AbstractResponse<com.xline.protobuf.WatchResponse> {
 
     private List<WatchEvent> events;
     private final ByteSequence namespace;
 
-    public WatchResponse(io.etcd.jetcd.api.WatchResponse response, ByteSequence namespace) {
+    public WatchResponse(com.xline.protobuf.WatchResponse response, ByteSequence namespace) {
         super(response, response.getHeader());
         this.namespace = namespace;
     }
 
     @VisibleForTesting
-    public WatchResponse(io.etcd.jetcd.api.WatchResponse response) {
+    public WatchResponse(com.xline.protobuf.WatchResponse response) {
         this(response, ByteSequence.EMPTY);
     }
 
@@ -87,7 +87,7 @@ public class WatchResponse extends AbstractResponse<io.etcd.jetcd.api.WatchRespo
      * @param response the response.
      * @return true if the WatchResponse is progress notification.
      */
-    public static boolean isProgressNotify(io.etcd.jetcd.api.WatchResponse response) {
+    public static boolean isProgressNotify(com.xline.protobuf.WatchResponse response) {
         return response.getEventsCount() == 0
                 && !response.getCreated()
                 && !response.getCanceled()
@@ -110,7 +110,7 @@ public class WatchResponse extends AbstractResponse<io.etcd.jetcd.api.WatchRespo
      * @param response the response.
      * @return true if the WatchResponse is created notification.
      */
-    public static boolean isCreatedNotify(io.etcd.jetcd.api.WatchResponse response) {
+    public static boolean isCreatedNotify(com.xline.protobuf.WatchResponse response) {
         return response.getCreated() && !response.getCanceled();
     }
 }

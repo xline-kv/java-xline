@@ -16,7 +16,7 @@
 
 package cloud.xline.jxline;
 
-import com.xline.protobuf.WatchResponse;
+import cloud.xline.jxline.watch.WatchResponse;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.common.exception.ClosedClientException;
 import io.etcd.jetcd.options.WatchOption;

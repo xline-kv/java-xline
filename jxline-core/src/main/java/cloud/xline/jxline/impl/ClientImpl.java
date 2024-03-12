@@ -14,6 +14,8 @@ public final class ClientImpl implements Client {
 
     private final MemorizingClientSupplier<Auth> authClient;
 
+    private final MemorizingClientSupplier<Watch> watchClient;
+
     public ClientImpl(ClientBuilder clientBuilder) {
         this.manager = new ClientConnectionManager(clientBuilder);
         this.protocolClient = new ProtocolClientImpl(this.manager);
@@ -22,6 +24,7 @@ public final class ClientImpl implements Client {
         this.authClient =
                 new MemorizingClientSupplier<>(
                         () -> new AuthImpl(this.protocolClient, this.manager));
+        this.watchClient = new MemorizingClientSupplier<>(() -> new WatchImpl(this.manager));
     }
 
     @Override
@@ -37,5 +40,19 @@ public final class ClientImpl implements Client {
     @Override
     public Auth getAuthClient() {
         return this.authClient.get();
+    }
+
+    @Override
+    public Watch getWatchClient() {
+        return this.watchClient.get();
+    }
+
+    @Override
+    public void close() {
+        this.kvClient.close();
+        this.authClient.close();
+        this.watchClient.close();
+        this.protocolClient.close();
+        this.manager.close();
     }
 }

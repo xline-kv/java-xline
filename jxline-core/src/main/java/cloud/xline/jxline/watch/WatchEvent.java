@@ -16,7 +16,7 @@
 
 package cloud.xline.jxline.watch;
 
-import io.etcd.jetcd.KeyValue;
+import cloud.xline.jxline.KeyValue;
 
 /** Watch event, return by watch, contain put, delete event. */
 public class WatchEvent {
