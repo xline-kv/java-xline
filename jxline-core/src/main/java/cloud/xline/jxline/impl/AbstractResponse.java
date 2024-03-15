@@ -23,12 +23,25 @@ import io.etcd.jetcd.Response;
 
 import java.util.function.Function;
 
+/**
+ * Build response based on some protobuf types
+ *
+ * @param <R> Protobuf types
+ */
 public class AbstractResponse<R> implements Response {
 
     private final R response;
     private final ResponseHeader responseHeader;
     private final Header header;
 
+    /**
+     * Create a new AbstractResponse based on the given response from curp server.
+     *
+     * @param sr CommandResponse
+     * @param asr SyncResponse
+     * @param mapping Mapping function
+     * @param headerMapping Header mapping function
+     */
     public AbstractResponse(
             CommandResponse sr,
             SyncResponse asr,
@@ -44,12 +57,23 @@ public class AbstractResponse<R> implements Response {
         this.header = new HeaderImpl();
     }
 
+    /**
+     * Create a new AbstractResponse.
+     *
+     * @param response The response
+     * @param header The header
+     */
     public AbstractResponse(R response, ResponseHeader header) {
         this.response = response;
         this.responseHeader = header;
         this.header = new HeaderImpl();
     }
 
+    /**
+     * Get the response header.
+     *
+     * @return the response header
+     */
     @Override
     public Header getHeader() {
         return header;
@@ -60,10 +84,20 @@ public class AbstractResponse<R> implements Response {
         return response.toString();
     }
 
+    /**
+     * Get the response.
+     *
+     * @return the response
+     */
     protected final R getResponse() {
         return this.response;
     }
 
+    /**
+     * Get the response header.
+     *
+     * @return the response header
+     */
     protected final ResponseHeader getResponseHeader() {
         return this.responseHeader;
     }

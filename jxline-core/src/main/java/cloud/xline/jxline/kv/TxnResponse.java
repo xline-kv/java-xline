@@ -42,11 +42,25 @@ public class TxnResponse extends AbstractResponse<com.xline.protobuf.TxnResponse
     private List<DeleteResponse> deleteResponses;
     private List<TxnResponse> txnResponses;
 
+    /**
+     * Creates a new TxnResponse based on the given {@link CommandResponse} and {@link
+     * SyncResponse}.
+     *
+     * @param sr {@link CommandResponse}
+     * @param asr {@link SyncResponse}
+     * @param namespace the namespace of the response
+     */
     public TxnResponse(CommandResponse sr, SyncResponse asr, ByteSequence namespace) {
         super(sr, asr, CommandResponse::getTxnResponse, s -> s.getTxnResponse().getHeader());
         this.namespace = namespace;
     }
 
+    /**
+     * Creates a new TxnResponse.
+     *
+     * @param txnResponse {@link com.xline.protobuf.TxnResponse}
+     * @param namespace the namespace of the response
+     */
     public TxnResponse(com.xline.protobuf.TxnResponse txnResponse, ByteSequence namespace) {
         super(txnResponse, txnResponse.getHeader());
         this.namespace = namespace;

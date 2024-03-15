@@ -601,6 +601,11 @@ public final class ClientBuilder implements Cloneable {
         return this;
     }
 
+    /**
+     * Get Keepalive option for gRPC
+     *
+     * @return if this client uses gRPC keep alive without calls.
+     */
     public Boolean keepaliveWithoutCalls() {
         return keepaliveWithoutCalls;
     }
