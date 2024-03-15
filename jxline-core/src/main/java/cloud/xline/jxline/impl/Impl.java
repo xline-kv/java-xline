@@ -21,6 +21,11 @@ abstract class Impl {
         return this.connectionManager;
     }
 
+    /**
+     * Returns the logger for this class.
+     *
+     * @return the logger
+     */
     protected Logger logger() {
         return this.logger;
     }

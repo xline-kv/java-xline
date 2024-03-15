@@ -16,6 +16,9 @@ public class CurpException extends RuntimeException {
             Metadata.Key.of(
                     "grpc-status-details-bin", ProtoUtils.metadataMarshaller(DEFAULT_CURP_ERROR));
 
+    /**
+     * The error details.
+     */
     private final CurpError error;
 
     public CurpException(CurpError error) {

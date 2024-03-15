@@ -9,7 +9,17 @@ import io.etcd.jetcd.support.Util;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+/** Requests helper */
 public final class Requests {
+    /**
+     * Maps the PutRequest to the Command
+     *
+     * @param key the key
+     * @param value the value
+     * @param option the put option
+     * @param namespace the namespace binding to the command
+     * @return the command
+     */
     public static Command mapPutRequest(
             ByteSequence key, ByteSequence value, PutOption option, ByteSequence namespace) {
         PutRequest req =
@@ -26,6 +36,14 @@ public final class Requests {
                 .build();
     }
 
+    /**
+     * Maps the RangeRequest to the Command
+     *
+     * @param key the key
+     * @param option the get option
+     * @param namespace the namespace binding to the command
+     * @return the command
+     */
     public static Command mapRangeRequest(
             ByteSequence key, GetOption option, ByteSequence namespace) {
         RangeRequest.Builder builder =
@@ -54,6 +72,14 @@ public final class Requests {
                 .build();
     }
 
+    /**
+     * Maps the DeleteRequest to the Command
+     *
+     * @param key the key
+     * @param option the delete option
+     * @param namespace the namespace binding to the command
+     * @return the command
+     */
     public static Command mapDeleteRequest(
             ByteSequence key, DeleteOption option, ByteSequence namespace) {
         DeleteRangeRequest.Builder builder =
@@ -73,6 +99,13 @@ public final class Requests {
                 .build();
     }
 
+    /**
+     * Maps the TxnRequest to the Command
+     *
+     * @param revision the revision
+     * @param option the txn option
+     * @return the command
+     */
     public static Command mapCompactRequest(long revision, CompactOption option) {
         CompactionRequest req =
                 CompactionRequest.newBuilder()
