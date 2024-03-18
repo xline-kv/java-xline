@@ -17,8 +17,8 @@
 package cloud.xline.jxline;
 
 import cloud.xline.jxline.kv.TxnResponse;
-import io.etcd.jetcd.op.Cmp;
-import io.etcd.jetcd.op.Op;
+import cloud.xline.jxline.op.Cmp;
+import cloud.xline.jxline.op.Op;
 
 import java.util.concurrent.CompletableFuture;
 

@@ -4,6 +4,7 @@ import cloud.xline.jxline.KV;
 import cloud.xline.jxline.ProtocolClient;
 import cloud.xline.jxline.Txn;
 import cloud.xline.jxline.kv.*;
+import cloud.xline.jxline.op.TxnImpl;
 import cloud.xline.jxline.support.Requests;
 import com.xline.protobuf.Command;
 import io.etcd.jetcd.ByteSequence;
@@ -16,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.util.Objects.requireNonNull;
 
-public class KVImpl extends Impl implements KV {
+class KVImpl extends Impl implements KV {
 
     private final ProtocolClient protocolClient;
 
@@ -37,7 +38,7 @@ public class KVImpl extends Impl implements KV {
         requireNonNull(value, "value should not be null");
         requireNonNull(option, "option should not be null");
         Command cmd =
-                Requests.mapPutRequest(key, value, option, this.connectionManager().getNamespace());
+                Requests.mapPutCommand(key, value, option, this.connectionManager().getNamespace());
         return protocolClient.propose(
                 cmd,
                 true,
@@ -55,7 +56,7 @@ public class KVImpl extends Impl implements KV {
         requireNonNull(key, "key should not be null");
         requireNonNull(option, "option should not be null");
         Command cmd =
-                Requests.mapRangeRequest(key, option, this.connectionManager().getNamespace());
+                Requests.mapRangeCommand(key, option, this.connectionManager().getNamespace());
         return protocolClient.propose(
                 cmd,
                 true,
@@ -73,7 +74,7 @@ public class KVImpl extends Impl implements KV {
         requireNonNull(key, "key should not be null");
         requireNonNull(option, "option should not be null");
         Command cmd =
-                Requests.mapDeleteRequest(key, option, this.connectionManager().getNamespace());
+                Requests.mapDeleteCommand(key, option, this.connectionManager().getNamespace());
         return protocolClient.propose(
                 cmd,
                 true,
@@ -94,6 +95,14 @@ public class KVImpl extends Impl implements KV {
 
     @Override
     public Txn txn() {
-        return null;
+        return TxnImpl.newTxn(
+                this.connectionManager().getNamespace(),
+                cmd ->
+                        protocolClient.propose(
+                                cmd,
+                                true,
+                                (sr, asr) ->
+                                        new TxnResponse(
+                                                sr, asr, this.connectionManager().getNamespace())));
     }
 }

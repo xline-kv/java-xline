@@ -5,21 +5,6 @@ on:
     branches: [ main ]
 
 jobs:
-  commit:
-    name: Commit Message Validation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - run: git show-ref
-      - uses: actions-rs/install@v0.1
-        with:
-          crate: git-cz
-          version: latest
-      - name: Validate commit messages
-        run: git-cz check ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
-
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -38,7 +23,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Start the cluster
-        run: ./scripts/quick_start.sh
+        run: docker compose -f ci/docker-compose.yml up -d
 
       - name: Run test
         run: ./gradlew test
